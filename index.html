@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hemant Khandelwal | Major Incident Manager</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#050505',
+                        secondary: '#0D1117',
+                        card: 'rgba(255,255,255,0.05)',
+                        accent: '#00E5FF',
+                        success: '#00FF94',
+                        warning: '#FFC857',
+                        critical: '#FF3B3B'
+                    },
+                    fontFamily: {
+                        hero: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-primary text-white font-body antialiased overflow-x-hidden">
+
+    <!-- Preloader — Command Center Boot Sequence -->
+    <div id="preloader" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden" style="background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border: 1px solid rgba(255,255,255,0.06); box-shadow: inset 0 0 200px rgba(0,229,255,0.04);">
+        <!-- Subtle edge glow -->
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,229,255,0.05) 100%);"></div>
+        <!-- Grid pattern overlay -->
+        <div class="absolute inset-0 opacity-[0.15]" style="background-image: linear-gradient(rgba(0,229,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.4) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <!-- Scanning line -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-accent/80 to-transparent" style="animation: scan-line 2s ease-in-out infinite;"></div>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-center gap-8">
+            <!-- Command Center Status Ring -->
+            <div class="relative w-28 h-28">
+                <!-- Outer hex ring -->
+                <svg class="absolute inset-0 w-full h-full" style="animation: spin-ring 8s linear infinite;" viewBox="0 0 112 112">
+                    <polygon points="56,6 104,34 104,78 56,106 8,78 8,34" fill="none" stroke="rgba(0,229,255,0.15)" stroke-width="1"/>
+                    <polygon points="56,12 98,37 98,75 56,100 14,75 14,37" fill="none" stroke="rgba(0,229,255,0.25)" stroke-width="0.5"/>
+                </svg>
+                <!-- Inner rotating ring -->
+                <svg class="absolute inset-0 w-full h-full" style="animation: spin-ring 3s linear infinite reverse;" viewBox="0 0 112 112">
+                    <circle cx="56" cy="56" r="42" fill="none" stroke="rgba(0,229,255,0.15)" stroke-width="1"/>
+                    <circle cx="56" cy="56" r="42" fill="none" stroke="rgba(0,229,255,0.7)" stroke-width="1.5" stroke-dasharray="50 214" stroke-linecap="round"/>
+                </svg>
+                <!-- Center status dot -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="relative">
+                        <div class="w-3 h-3 rounded-full bg-accent shadow-[0_0_25px_rgba(0,229,255,0.8)]" style="animation: pulse-dot 1.2s ease-in-out infinite;"></div>
+                        <div class="absolute inset-0 rounded-full bg-accent/30" style="animation: ping-ring 1.5s ease-out infinite;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status indicators row -->
+            <div class="flex items-center gap-6">
+                <span class="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] uppercase text-white/60">
+                    <span class="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(0,255,148,0.8)]"></span> SYS OK
+                </span>
+                <span class="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] uppercase text-white/60">
+                    <span class="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(0,255,148,0.8)]"></span> NET OK
+                </span>
+                <span id="preloader-sec-status" class="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] uppercase text-white/60">
+                    <span class="w-1.5 h-1.5 rounded-full bg-warning shadow-[0_0_8px_rgba(255,200,87,0.8)] animate-pulse"></span> AUTH
+                </span>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="w-64 h-0.5 bg-white/[0.04] rounded-full overflow-hidden">
+                <div id="preloader-bar" class="h-full bg-gradient-to-r from-accent/60 via-accent to-accent/60 rounded-full" style="width: 0%;"></div>
+            </div>
+
+            <!-- Command center log -->
+            <div id="preloader-log" class="font-mono text-[11px] tracking-[0.15em] uppercase text-accent/80 text-center min-h-[1.5em]">
+                ESTABLISHING BRIDGE...
+            </div>
+
+            <!-- Welcome message (hidden until complete) -->
+            <div id="preloader-welcome" class="hidden font-hero text-3xl md:text-4xl font-bold text-accent text-center tracking-wider drop-shadow-[0_0_20px_rgba(0,229,255,0.4)]">
+                WELCOME
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Premium Mouse Glow -->
+    <div id="mouse-glow"></div>
+
+    <!-- Top Left Logo (Signature) -->
+    <div class="fixed top-4 left-4 md:top-10 md:left-10 z-[100] pointer-events-none">
+        <img src="signature.png" class="signature-img w-32 sm:w-40 md:w-72 h-auto object-contain" alt="Hemant Khandelwal Signature">
+    </div>
+
+    <!-- Top Right Nav -->
+    <div class="fixed top-6 right-6 md:top-10 md:right-10 z-[100] flex items-center gap-6">
+        <a href="https://in.linkedin.com/in/hemant-khandelwal" target="_blank" rel="noopener noreferrer" class="text-white hover:text-accent transition-all duration-300 hover:scale-110 drop-shadow-[0_0_10px_rgba(0,229,255,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,229,255,0.8)]" title="LinkedIn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+        </a>
+        <a href="https://wa.me/919766516846" target="_blank" rel="noopener noreferrer" class="hire-me-btn font-hero text-sm md:text-base font-bold tracking-wider uppercase px-6 py-2.5 rounded-full border border-accent text-accent relative overflow-hidden group">
+            <span class="relative z-10 group-hover:text-primary transition-colors duration-300">Hire Me</span>
+            <div class="absolute inset-0 bg-accent transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></div>
+        </a>
+    </div>
+
+    <!-- Grid Background Overlay -->
+    <div class="fixed inset-0 pointer-events-none z-[-1] grid-bg opacity-30"></div>
+
+    <!-- SECTION 1: SCROLL INTRO -->
+    <section id="hero" class="relative h-[500vh] w-full">
+        <!-- Sticky Canvas Container -->
+        <div class="sticky top-0 h-screen w-full overflow-hidden">
+            <canvas id="sequence-canvas" class="absolute top-0 left-0 w-full h-full object-cover z-0"></canvas>
+            
+            <!-- Story Overlays -->
+            <!-- FRAME 0-20 -->
+            <div id="story-1" class="absolute inset-0 flex flex-col justify-end items-start text-left z-20 opacity-0 p-8 md:p-24 pb-32 pointer-events-none">
+                <h1 class="font-hero text-4xl md:text-6xl font-bold tracking-tight text-white glow-text">HEMANT KHANDELWAL</h1>
+                <h2 class="font-hero text-xl md:text-2xl mt-2 text-accent tracking-widest uppercase">Major Incident Manager</h2>
+                <p class="font-body text-base md:text-lg mt-4 text-gray-300 max-w-lg border-t border-white/20 pt-4">Keeping Critical Services Available.<br>24x7.</p>
+            </div>
+
+            <!-- FRAME 20-40 -->
+            <div id="story-2" class="absolute inset-0 flex flex-col items-center justify-center text-center z-20 opacity-0 px-4 pointer-events-none">
+                <div class="relative">
+                    <h2 class="font-hero text-7xl md:text-[12rem] font-bold text-success glow-success leading-none"><span id="availability-counter">0.00</span>%</h2>
+                </div>
+                <p class="font-body text-xl md:text-3xl mt-8 text-gray-300 uppercase tracking-widest">Enterprise Service Availability</p>
+            </div>
+
+            <!-- FRAME 40-60 -->
+            <div id="story-3" class="absolute inset-0 flex flex-col justify-center text-left z-20 opacity-0 px-8 md:px-24 pointer-events-none">
+                <h2 class="font-hero text-5xl md:text-8xl font-bold text-white max-w-4xl glow-text leading-tight">When systems fail,<br>leadership matters.</h2>
+                <p class="font-body text-xl md:text-3xl mt-8 text-accent border-l-4 border-accent pl-6">Driving restoration efforts across global teams.</p>
+            </div>
+
+            <!-- FRAME 60-80 -->
+            <div id="story-4" class="absolute inset-0 flex flex-col justify-center items-end text-right z-20 opacity-0 px-8 md:px-24 pointer-events-none">
+                <h2 class="font-hero text-5xl md:text-8xl font-bold text-white max-w-4xl glow-text leading-tight">Millions of users impacted.<br>One coordinated response.</h2>
+                <p class="font-body text-xl md:text-3xl mt-8 text-warning border-r-4 border-warning pr-6">Bridge calls. Escalations.<br>Stakeholder management.<br>Resolution leadership.</p>
+            </div>
+
+            <!-- FRAME 80-100 -->
+            <div id="story-5" class="absolute inset-0 flex flex-col items-center justify-center text-center z-20 opacity-0 px-4 pointer-events-none">
+                <h2 class="font-hero text-6xl md:text-9xl font-bold text-white glow-text leading-tight">From Chaos<br><span class="text-accent">To Stability</span></h2>
+            </div>
+            
+            <!-- LAST FRAME MEDALS -->
+            <div id="story-medals" class="absolute inset-0 flex flex-col justify-end items-start text-left z-20 opacity-0 p-8 md:p-24 pb-12 pointer-events-none">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="medal-badge" title="Microsoft Certified Professional">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning">
+                          <path fill-rule="evenodd" d="M5.25 2.25a.75.75 0 0 1 .75.75v.065c3.28-.15 6.72-.15 10 0V3a.75.75 0 0 1 1.5 0v1.077c2.164.334 3.75 2.213 3.75 4.423v1.1c0 1.259-.691 2.39-1.8 2.927C18.497 15.632 16.5 17.065 14.25 18v2.25h1.5a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1 0-1.5h1.5V18C7.5 17.065 5.503 15.632 4.55 12.527A3.254 3.254 0 0 1 2.75 9.6V8.5c0-2.21 1.586-4.089 3.75-4.423V3a.75.75 0 0 1 .75-.75Zm-1.025 7.425a1.75 1.75 0 0 0 1.025 1.163V6.368a5.5 5.5 0 0 0-1.025.293v3.014ZM18.75 6.661c-.328-.112-.67-.21-1.025-.293v4.47c.394-.282.748-.616 1.025-1.163V6.66Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-warning font-hero tracking-wider">MCP</span>
+                    </div>
+                    <div class="medal-badge" title="Microsoft Specialist">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning">
+                          <path fill-rule="evenodd" d="M5.25 2.25a.75.75 0 0 1 .75.75v.065c3.28-.15 6.72-.15 10 0V3a.75.75 0 0 1 1.5 0v1.077c2.164.334 3.75 2.213 3.75 4.423v1.1c0 1.259-.691 2.39-1.8 2.927C18.497 15.632 16.5 17.065 14.25 18v2.25h1.5a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1 0-1.5h1.5V18C7.5 17.065 5.503 15.632 4.55 12.527A3.254 3.254 0 0 1 2.75 9.6V8.5c0-2.21 1.586-4.089 3.75-4.423V3a.75.75 0 0 1 .75-.75Zm-1.025 7.425a1.75 1.75 0 0 0 1.025 1.163V6.368a5.5 5.5 0 0 0-1.025.293v3.014ZM18.75 6.661c-.328-.112-.67-.21-1.025-.293v4.47c.394-.282.748-.616 1.025-1.163V6.66Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-warning font-hero tracking-wider">MS</span>
+                    </div>
+                    <div class="medal-badge" title="CISEH">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning">
+                          <path fill-rule="evenodd" d="M5.25 2.25a.75.75 0 0 1 .75.75v.065c3.28-.15 6.72-.15 10 0V3a.75.75 0 0 1 1.5 0v1.077c2.164.334 3.75 2.213 3.75 4.423v1.1c0 1.259-.691 2.39-1.8 2.927C18.497 15.632 16.5 17.065 14.25 18v2.25h1.5a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1 0-1.5h1.5V18C7.5 17.065 5.503 15.632 4.55 12.527A3.254 3.254 0 0 1 2.75 9.6V8.5c0-2.21 1.586-4.089 3.75-4.423V3a.75.75 0 0 1 .75-.75Zm-1.025 7.425a1.75 1.75 0 0 0 1.025 1.163V6.368a5.5 5.5 0 0 0-1.025.293v3.014ZM18.75 6.661c-.328-.112-.67-.21-1.025-.293v4.47c.394-.282.748-.616 1.025-1.163V6.66Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-warning font-hero tracking-wider">CISEH</span>
+                    </div>
+                    <div class="medal-badge" title="ITIL V4">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning">
+                          <path fill-rule="evenodd" d="M5.25 2.25a.75.75 0 0 1 .75.75v.065c3.28-.15 6.72-.15 10 0V3a.75.75 0 0 1 1.5 0v1.077c2.164.334 3.75 2.213 3.75 4.423v1.1c0 1.259-.691 2.39-1.8 2.927C18.497 15.632 16.5 17.065 14.25 18v2.25h1.5a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1 0-1.5h1.5V18C7.5 17.065 5.503 15.632 4.55 12.527A3.254 3.254 0 0 1 2.75 9.6V8.5c0-2.21 1.586-4.089 3.75-4.423V3a.75.75 0 0 1 .75-.75Zm-1.025 7.425a1.75 1.75 0 0 0 1.025 1.163V6.368a5.5 5.5 0 0 0-1.025.293v3.014ZM18.75 6.661c-.328-.112-.67-.21-1.025-.293v4.47c.394-.282.748-.616 1.025-1.163V6.66Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-warning font-hero tracking-wider">ITIL v4</span>
+                    </div>
+                    <div class="medal-badge" title="ITIL V3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="text-warning">
+                          <path fill-rule="evenodd" d="M5.25 2.25a.75.75 0 0 1 .75.75v.065c3.28-.15 6.72-.15 10 0V3a.75.75 0 0 1 1.5 0v1.077c2.164.334 3.75 2.213 3.75 4.423v1.1c0 1.259-.691 2.39-1.8 2.927C18.497 15.632 16.5 17.065 14.25 18v2.25h1.5a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1 0-1.5h1.5V18C7.5 17.065 5.503 15.632 4.55 12.527A3.254 3.254 0 0 1 2.75 9.6V8.5c0-2.21 1.586-4.089 3.75-4.423V3a.75.75 0 0 1 .75-.75Zm-1.025 7.425a1.75 1.75 0 0 0 1.025 1.163V6.368a5.5 5.5 0 0 0-1.025.293v3.014ZM18.75 6.661c-.328-.112-.67-.21-1.025-.293v4.47c.394-.282.748-.616 1.025-1.163V6.66Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-warning font-hero tracking-wider">ITIL v3</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Down / Skip Indicator -->
+        <button id="scroll-indicator" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 cursor-pointer border-none bg-transparent group">
+            <span class="font-mono text-xs tracking-[0.3em] uppercase text-white/40 group-hover:text-white/70 transition-colors duration-300">Scroll Down or Click Here </span>
+            <div class="flex flex-col items-center gap-0.5">
+                <svg class="w-5 h-5 text-white/40 group-hover:text-white/70 transition-colors duration-300" style="animation: arrow-bounce 1.6s ease-in-out infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </button>
+    </section>
+
+    <!-- SECTION 2: ABOUT -->
+    <section id="about" class="py-32 px-8 md:px-24 bg-primary relative border-t border-white/5 z-20">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="font-hero text-4xl md:text-6xl font-bold mb-16 uppercase tracking-wider"><span class="text-accent mr-4">/</span> Who Am I?</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                <div class="space-y-8 text-xl text-gray-300 font-body leading-relaxed border-l border-white/10 pl-8">
+                    <p>I am Hemant Khandelwal, a Major Incident Manager focused on restoring critical business services during high-impact outages.</p>
+                    <p>In the command center, seconds matter. I specialize in bringing order to chaos, coordinating global teams, and ensuring executives have clear, actionable information when multi-million dollar services are on the line.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 h-max">
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Major Incident Management</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Crisis Coordination</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Executive Communication</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Stakeholder Management</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Service Restoration</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Escalation Governance</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> ITIL Best Practices</div>
+                    <div class="glass-card p-4 flex items-center"><span class="w-2 h-2 rounded-full bg-accent mr-3"></span> Change & Problem Mgmt</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="story-modal" class="fixed inset-0 hidden z-50 bg-black/90 backdrop-blur-xl px-6 py-10 md:px-12 md:py-16">
+        <button id="story-modal-close" class="absolute top-8 right-8 z-40 w-12 h-12 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all">
+            <span class="text-2xl">×</span>
+        </button>
+        <div class="relative max-w-6xl mx-auto h-full overflow-hidden rounded-[2rem] border border-white/10 bg-[#07101A]/95 shadow-[0_40px_120px_rgba(0,0,0,0.85)]">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,229,255,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,59,59,0.14),transparent_28%)] pointer-events-none"></div>
+            <div class="relative z-20 h-full grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-8 p-10 md:p-14">
+                <div class="space-y-6">
+                    <span id="story-modal-tag" class="text-accent font-mono tracking-[0.35em] uppercase text-sm"></span>
+                    <h2 id="story-modal-title" class="font-hero text-4xl md:text-6xl font-bold leading-tight text-white"></h2>
+                    <p id="story-modal-excerpt" class="text-gray-300 text-lg leading-relaxed"></p>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Lesson</p>
+                            <p id="story-modal-lesson" class="text-white text-base leading-relaxed"></p>
+                        </div>
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Impact</p>
+                            <p id="story-modal-impact" class="text-white text-base leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Resolution</p>
+                            <p id="story-modal-resolution" class="text-white text-base leading-relaxed"></p>
+                        </div>
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Command Center Takeaway</p>
+                            <p id="story-modal-takeaway" class="text-white text-base leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative rounded-[1.5rem] border border-white/10 overflow-hidden bg-[#0C171A] p-8">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,229,255,0.15),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(255,59,59,0.1),transparent_28%)] pointer-events-none"></div>
+                    <div class="relative z-10 flex h-full flex-col justify-between gap-8">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="badge-card">Command Center</span>
+                                <span class="badge-card badge-secondary">Realtime Metrics</span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="rounded-3xl bg-white/5 p-5 border border-white/10">
+                                    <p class="text-sm uppercase tracking-[0.35em] text-gray-400">Bridge Call Status</p>
+                                    <div class="mt-4 flex items-center gap-3 text-white font-bold"><span class="w-3 h-3 rounded-full bg-success animate-pulse"></span><span id="story-modal-status">Active escalation</span></div>
+                                </div>
+                                <div class="rounded-3xl bg-white/5 p-5 border border-white/10">
+                                    <p class="text-sm uppercase tracking-[0.35em] text-gray-400">Response Time</p>
+                                    <div class="mt-4 text-white text-3xl font-bold" id="story-modal-response">00:07</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded-3xl border border-white/10 bg-[#08101A]/80 p-6">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-4">Live Incident Flow</p>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between text-sm text-gray-300"><span>Alert received</span><span class="text-accent">00:00</span></div>
+                                <div class="flex items-center justify-between text-sm text-gray-300"><span>Bridge established</span><span class="text-accent">00:03</span></div>
+                                <div class="flex items-center justify-between text-sm text-gray-300"><span>Containment</span><span class="text-accent">00:12</span></div>
+                                <div class="flex items-center justify-between text-sm text-gray-300"><span>Service restored</span><span class="text-accent">00:28</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION B: INCIDENT LEADERSHIP PRINCIPLES -->
+    <section id="leadership" class="py-32 px-8 md:px-24 bg-primary relative z-20 border-t border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col lg:flex-row items-center gap-12 mb-16">
+                <div class="max-w-2xl">
+                    <p class="text-accent font-mono tracking-[0.35em] uppercase text-sm mb-3">Incident Leadership Principles</p>
+                    <h2 class="font-hero text-4xl md:text-6xl font-bold uppercase leading-tight">The Leadership Response Framework</h2>
+                    <p class="text-gray-400 mt-6">Hover a principle to rotate the mission control wheel and reveal the leadership behavior that drives fast restoration.</p>
+                </div>
+                <div class="ml-auto hidden lg:block text-right text-gray-400 max-w-sm">
+                    <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+                        <p class="font-mono uppercase tracking-[0.35em] text-gray-400 mb-3">Command Center Intelligence</p>
+                        <p>Dynamic connection lines and radial nodes create a cockpit feel for every principle.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="relative flex flex-col items-center justify-center">
+                <div class="command-wheel relative w-[520px] h-[520px] mx-auto">
+                    <div class="command-ring"></div>
+                    <div class="command-center flex items-center justify-center rounded-full border border-white/10 bg-[#07101A]/95 shadow-[0_0_60px_rgba(0,229,255,0.15)]">
+                        <div class="text-center px-8">
+                            <p class="text-sm uppercase tracking-[0.35em] text-gray-400 mb-3">Core</p>
+                            <p class="font-hero text-2xl md:text-3xl font-bold text-white">Incident Leadership</p>
+                        </div>
+                    </div>
+                    <button class="command-node" data-title="Communicate Facts" data-description="Keep teams aligned with clear, factual updates instead of assumptions." style="--angle:0deg;">
+                        <span>Communicate Facts</span>
+                    </button>
+                    <button class="command-node" data-title="Restore First" data-description="Prioritize service restoration before detailed root cause analysis." style="--angle:60deg;">
+                        <span>Restore First</span>
+                    </button>
+                    <button class="command-node" data-title="Stay Calm Under Pressure" data-description="Maintain a steady center of gravity even when alerts are flashing red." style="--angle:120deg;">
+                        <span>Stay Calm Under Pressure</span>
+                    </button>
+                    <button class="command-node" data-title="No Blame Culture" data-description="Focus on systems and process improvement rather than personal fault." style="--angle:180deg;">
+                        <span>No Blame Culture</span>
+                    </button>
+                    <button class="command-node" data-title="Focus On Business Impact" data-description="Translate technical risk into what matters most for the business." style="--angle:240deg;">
+                        <span>Focus On Business Impact</span>
+                    </button>
+                    <button class="command-node" data-title="Drive Accountability" data-description="Assign owners, confirm follow-through, and close the loop with discipline." style="--angle:300deg;">
+                        <span>Drive Accountability</span>
+                    </button>
+                </div>
+                <div id="leadership-details" class="mt-12 max-w-3xl rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_30px_90px_rgba(0,0,0,0.5)]">
+                    <p class="text-xs uppercase tracking-[0.35em] text-gray-400 mb-4">Hover a principle</p>
+                    <h3 class="font-hero text-3xl font-bold text-white" id="leadership-title">Command Center Ready</h3>
+                    <p class="text-gray-300 mt-4 leading-relaxed" id="leadership-description">Every principle is a tactical rule for the bridge, enabling faster restoration and stronger cross-team coordination.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION C: BRIDGE CALL PLAYBOOK -->
+    <section id="bridge-playbook" class="py-32 px-8 md:px-24 bg-secondary relative z-20 border-t border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-16 text-center">
+                <p class="text-accent font-mono tracking-[0.35em] uppercase text-sm mb-3">Bridge Call Playbook</p>
+                <h2 class="font-hero text-4xl md:text-6xl font-bold uppercase leading-tight">Emergency Response Timeline</h2>
+                <p class="text-gray-400 mt-6 max-w-2xl mx-auto">Follow the emergency response roadmap from first impact to post-incident validation.</p>
+            </div>
+            <div class="relative">
+                <div class="absolute top-0 left-10 bottom-0 w-1 bg-accent/10 rounded-full"></div>
+                <div id="bridge-progress" class="absolute top-0 left-10 w-1 bg-accent rounded-full origin-top" style="height:0;"></div>
+                <div class="space-y-16 pl-20 md:pl-28">
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="0-5 Minutes" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-accent/10 text-accent px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Impact Assessment</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">0-5 Minutes</h3>
+                        <p class="text-gray-300 leading-relaxed">Confirm business-critical services, gather initial metrics, and establish the first bridge call with response teams.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="5-10 Minutes" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-success/10 text-success px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Bridge Creation</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">5-10 Minutes</h3>
+                        <p class="text-gray-300 leading-relaxed">Mobilize incident command, invite key engineers, and synchronize the first status update across teams.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="10-15 Minutes" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-warning/10 text-warning px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Resolver Engagement</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">10-15 Minutes</h3>
+                        <p class="text-gray-300 leading-relaxed">Engage resolver groups, isolate probable causes, and begin containment while preserving evidence for RCA.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="15-30 Minutes" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-critical/10 text-critical px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Technical Coordination</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">15-30 Minutes</h3>
+                        <p class="text-gray-300 leading-relaxed">Coordinate fixes, verify stability, and update stakeholders with clear impact statements and next steps.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="30-60 Minutes" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-accent/10 text-accent px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Stakeholder Updates</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">30-60 Minutes</h3>
+                        <p class="text-gray-300 leading-relaxed">Deliver executive summaries, manage customer communications, and monitor recovery with status pulse checks.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="Recovery Phase" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-success/10 text-success px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">Validation</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">Recovery Phase</h3>
+                        <p class="text-gray-300 leading-relaxed">Validate service stability, confirm remediation, and prepare the detailed handover to operations teams.</p>
+                    </div>
+                    <div class="playbook-stage rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.4)] opacity-60 translate-y-12" data-step="Post Incident" data-trigger>
+                        <span class="inline-flex items-center justify-center rounded-full bg-white/10 text-white px-4 py-2 text-xs uppercase tracking-[0.35em] font-bold mb-4">RCA</span>
+                        <h3 class="font-hero text-3xl font-bold text-white mb-4">Post Incident</h3>
+                        <p class="text-gray-300 leading-relaxed">Drive RCA, document decisions, and convert operational pressure into stronger future execution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION D: TOOLS & ECOSYSTEM -->
+    <!-- SECTION E: WHAT I WOULD DO -->
+    <section id="scenario-sim" class="py-32 px-8 md:px-24 bg-secondary relative z-20 border-t border-white/5 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col lg:flex-row items-end justify-between gap-6 mb-16">
+                <div class="space-y-3">
+                    <p class="text-accent font-mono tracking-[0.35em] uppercase text-sm">What I Would Do</p>
+                    <h2 class="font-hero text-4xl md:text-6xl font-bold uppercase leading-tight">Live incident simulation scenarios</h2>
+                </div>
+                <p class="text-gray-400 max-w-xl">Choose a scenario and step into a premium command center simulation with playbook actions, stakeholder strategy, and recovery flow.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <button class="scenario-card group relative rounded-[2rem] border border-white/10 bg-white/5 p-8 text-left overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.45)]" data-scenario="banking-outage">
+                    <span class="text-sm uppercase tracking-[0.35em] text-warning">Banking</span>
+                    <h3 class="font-hero text-3xl font-bold mt-6 text-white">Banking Application Outage</h3>
+                    <p class="text-gray-300 mt-4">Prioritize payment flow stabilization and stakeholder confidence for a high-value service.</p>
+                    <span class="mt-8 inline-flex items-center gap-2 text-accent font-bold">Launch simulation →</span>
+                </button>
+                <button class="scenario-card group relative rounded-[2rem] border border-white/10 bg-white/5 p-8 text-left overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.45)]" data-scenario="email-failure">
+                    <span class="text-sm uppercase tracking-[0.35em] text-accent">Communications</span>
+                    <h3 class="font-hero text-3xl font-bold mt-6 text-white">Global Email Failure</h3>
+                    <p class="text-gray-300 mt-4">Coordinate escalation with the messaging platform team and keep global business units informed.</p>
+                    <span class="mt-8 inline-flex items-center gap-2 text-accent font-bold">Launch simulation →</span>
+                </button>
+                <button class="scenario-card group relative rounded-[2rem] border border-white/10 bg-white/5 p-8 text-left overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.45)]" data-scenario="failed-change">
+                    <span class="text-sm uppercase tracking-[0.35em] text-warning">Change</span>
+                    <h3 class="font-hero text-3xl font-bold mt-6 text-white">Failed Change Deployment</h3>
+                    <p class="text-gray-300 mt-4">Execute rollback, communicate risk, and own the bridge workflow from detection to restoration.</p>
+                    <span class="mt-8 inline-flex items-center gap-2 text-accent font-bold">Launch simulation →</span>
+                </button>
+                <button class="scenario-card group relative rounded-[2rem] border border-white/10 bg-white/5 p-8 text-left overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.45)]" data-scenario="db-performance">
+                    <span class="text-sm uppercase tracking-[0.35em] text-accent">Database</span>
+                    <h3 class="font-hero text-3xl font-bold mt-6 text-white">Database Performance Incident</h3>
+                    <p class="text-gray-300 mt-4">Manage the performance war room, align DBAs, and protect SLA-driven customer experience.</p>
+                    <span class="mt-8 inline-flex items-center gap-2 text-accent font-bold">Launch simulation →</span>
+                </button>
+                <button class="scenario-card group relative rounded-[2rem] border border-white/10 bg-white/5 p-8 text-left overflow-hidden shadow-[0_25px_80px_rgba(0,0,0,0.45)]" data-scenario="cloud-degradation">
+                    <span class="text-sm uppercase tracking-[0.35em] text-warning">Cloud</span>
+                    <h3 class="font-hero text-3xl font-bold mt-6 text-white">Cloud Service Degradation</h3>
+                    <p class="text-gray-300 mt-4">Coordinate cloud providers, impacted applications, and remediation communications across the bridge.</p>
+                    <span class="mt-8 inline-flex items-center gap-2 text-accent font-bold">Launch simulation →</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div id="scenario-panel" class="fixed inset-0 hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch;">
+        <div class="min-h-full flex items-start justify-center py-16 px-4 md:px-8">
+            <div class="relative w-full max-w-5xl rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_40px_120px_rgba(0,0,0,0.55)] overflow-hidden">
+                <!-- Close Button — inside card, top-right -->
+                <button id="scenario-panel-close" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 p-10 md:p-16">
+                    <div class="space-y-6">
+                        <span id="scenario-panel-tag" class="text-accent font-mono tracking-[0.35em] uppercase text-sm"></span>
+                        <h2 id="scenario-panel-title" class="font-hero text-4xl md:text-5xl font-bold text-white"></h2>
+                        <p id="scenario-panel-summary" class="text-gray-300 text-lg leading-relaxed"></p>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div class="glass-card p-6 border border-white/10">
+                                <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Business Impact</p>
+                                <p id="scenario-panel-impact" class="text-white leading-relaxed"></p>
+                            </div>
+                            <div class="glass-card p-6 border border-white/10">
+                                <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Immediate Actions</p>
+                                <p id="scenario-panel-actions" class="text-white leading-relaxed"></p>
+                            </div>
+                        </div>
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Bridge Call Strategy</p>
+                            <p id="scenario-panel-bridge" class="text-white leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Communication Plan</p>
+                            <p id="scenario-panel-communication" class="text-white leading-relaxed"></p>
+                        </div>
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Recovery Approach</p>
+                            <p id="scenario-panel-recovery" class="text-white leading-relaxed"></p>
+                        </div>
+                        <div class="glass-card p-6 border border-white/10">
+                            <p class="font-mono text-xs uppercase tracking-[0.35em] text-gray-400 mb-3">Lessons Learned</p>
+                            <p id="scenario-panel-lessons" class="text-white leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: LIVE INCIDENT DASHBOARD -->
+    <section id="dashboard" class="py-32 px-8 md:px-24 bg-secondary relative z-20">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="font-hero text-4xl md:text-6xl font-bold mb-16 uppercase tracking-wider flex items-center">
+                <span class="w-4 h-4 bg-critical rounded-full animate-pulse mr-6 shadow-[0_0_15px_rgba(255,59,59,0.8)]"></span>
+                Live Incident Dashboard
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="glass-card p-8 border-t-2 border-t-critical">
+                    <p class="text-gray-400 font-mono text-sm tracking-widest mb-4">CRITICAL INCIDENTS MANAGED</p>
+                    <div class="flex items-baseline">
+                        <p class="text-6xl font-bold text-critical dash-counter" data-target="120">0</p>
+                        <span class="text-3xl text-critical ml-1">+</span>
+                    </div>
+                </div>
+                <div class="glass-card p-8 border-t-2 border-t-accent">
+                    <p class="text-gray-400 font-mono text-sm tracking-widest mb-4">BRIDGE CALLS LED</p>
+                    <div class="flex items-baseline">
+                        <p class="text-6xl font-bold text-accent dash-counter" data-target="500">0</p>
+                        <span class="text-3xl text-accent ml-1">+</span>
+                    </div>
+                </div>
+                <div class="glass-card p-8 border-t-2 border-t-success">
+                    <p class="text-gray-400 font-mono text-sm tracking-widest mb-4">AVAILABILITY PROTECTED</p>
+                    <div class="flex items-baseline">
+                        <p class="text-6xl font-bold text-success dash-counter" data-target="99.95" data-decimal="true">0</p>
+                        <span class="text-3xl text-success ml-1">%</span>
+                    </div>
+                </div>
+                <div class="glass-card p-8 border-t-2 border-t-white">
+                    <p class="text-gray-400 font-mono text-sm tracking-widest mb-4">STAKEHOLDERS COORDINATED</p>
+                    <div class="flex items-baseline">
+                        <p class="text-6xl font-bold text-white dash-counter" data-target="1000">0</p>
+                        <span class="text-3xl text-white ml-1">+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-8 border-l-4 border-l-accent">
+                <p class="text-gray-400 font-mono text-sm tracking-widest mb-6">GLOBAL TEAMS MANAGED</p>
+                <div class="flex flex-wrap gap-4">
+                    <span class="px-6 py-2 bg-white/5 border border-white/10 rounded font-mono text-accent">Network</span>
+                    <span class="px-6 py-2 bg-white/5 border border-white/10 rounded font-mono text-accent">Cloud</span>
+                    <span class="px-6 py-2 bg-white/5 border border-white/10 rounded font-mono text-accent">Database</span>
+                    <span class="px-6 py-2 bg-white/5 border border-white/10 rounded font-mono text-accent">Application</span>
+                    <span class="px-6 py-2 bg-white/5 border border-white/10 rounded font-mono text-accent">Security</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION A: LESSONS FROM THE COMMAND CENTER -->
+    <section id="war-room" class="py-32 px-8 md:px-24 bg-secondary relative z-20 overflow-hidden border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <!-- Section Header with Animated Divider -->
+            <div class="mb-24">
+                <div class="flex flex-col items-center text-center mb-8">
+                    <p class="text-accent font-mono tracking-[0.35em] uppercase text-sm mb-4">Lessons From The Command Center</p>
+                    <h2 class="font-hero text-4xl md:text-6xl font-bold uppercase leading-tight mb-6">Observations from Major Incident Management</h2>
+                    <p class="text-gray-400 max-w-2xl text-lg">Observations, lessons, and experiences from Major Incident Management, service operations, executive communication, and enterprise incident response.</p>
+                </div>
+                <!-- Animated Divider -->
+                <div class="flex justify-center items-center mt-12">
+                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent/50 to-transparent max-w-xs"></div>
+                </div>
+            </div>
+
+            <!-- Premium Grid Background -->
+            <div class="absolute inset-0 opacity-5 pointer-events-none" style="background-image: linear-gradient(0deg, transparent 24%, rgba(0,229,255,.05) 25%, rgba(0,229,255,.05) 26%, transparent 27%, transparent 74%, rgba(0,229,255,.05) 75%, rgba(0,229,255,.05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0,229,255,.05) 25%, rgba(0,229,255,.05) 26%, transparent 27%, transparent 74%, rgba(0,229,255,.05) 75%, rgba(0,229,255,.05) 76%, transparent 77%, transparent); background-size: 50px 50px;"></div>
+
+            <!-- Article Grid -->
+            <div class="relative z-10">
+                <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                    <!-- Articles will be rendered by JavaScript -->
+                </div>
+
+                <!-- View More Button -->
+                <div id="view-more-wrapper" class="flex justify-center mb-16">
+                    <button id="view-more-btn" class="group relative font-hero font-bold tracking-wider uppercase text-xs px-6 py-2.5 rounded-full border border-accent/40 text-accent overflow-hidden transition-all duration-500 hover:border-accent hover:shadow-[0_0_30px_rgba(0,229,255,0.25)]">
+                        <span class="relative z-10 flex items-center gap-2">
+                            View More Articles
+                            <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </span>
+                        <div class="absolute inset-0 bg-accent transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500 ease-out z-0"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- SECTION 5: TESTIMONIALS -->
+    <section id="testimonials" class="py-32 px-8 md:px-24 bg-secondary relative z-20 overflow-hidden border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="font-hero text-4xl md:text-6xl font-bold mb-16 uppercase tracking-wider text-center"><span class="text-accent">/</span> Testimonials</h2>
+            <div class="flex flex-wrap justify-center gap-6 testimonials-container">
+                <div class="glass-card p-6 md:p-10 max-w-sm relative opacity-0 translate-y-8 transition-all duration-700">
+                    <span class="absolute top-4 left-4 text-4xl text-white/10 font-hero">"</span>
+                    <p class="text-lg text-gray-300 font-body relative z-10 italic mt-4">Strong communicator.</p>
+                </div>
+                <div class="glass-card p-6 md:p-10 max-w-sm relative transform md:translate-y-8 opacity-0 translate-y-16 transition-all duration-700 delay-100">
+                    <span class="absolute top-4 left-4 text-4xl text-white/10 font-hero">"</span>
+                    <p class="text-lg text-gray-300 font-body relative z-10 italic mt-4">Calm during crises.</p>
+                </div>
+                <div class="glass-card p-6 md:p-10 max-w-sm relative transform md:-translate-y-4 opacity-0 translate-y-4 transition-all duration-700 delay-200">
+                    <span class="absolute top-4 left-4 text-4xl text-white/10 font-hero">"</span>
+                    <p class="text-lg text-gray-300 font-body relative z-10 italic mt-4">Excellent bridge management.</p>
+                </div>
+                <div class="glass-card p-6 md:p-10 max-w-sm relative transform md:translate-y-4 opacity-0 translate-y-12 transition-all duration-700 delay-300">
+                    <span class="absolute top-4 left-4 text-4xl text-white/10 font-hero">"</span>
+                    <p class="text-lg text-gray-300 font-body relative z-10 italic mt-4">Reliable escalation leader.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 8: CONTACT -->
+    <section id="contact" class="h-screen w-full relative flex items-center justify-center bg-primary z-20 overflow-hidden border-t border-white/10">
+        <!-- Grid Background specific to contact -->
+        <div class="absolute inset-0 z-0 grid-bg opacity-30 radar-sweep"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary z-10"></div>
+        
+        <div class="relative z-20 text-center px-4 max-w-4xl">
+            <h2 class="font-hero text-4xl md:text-7xl font-bold mb-6 text-white glow-text leading-tight">Need Someone To Lead During Critical Outages?</h2>
+            <p class="font-body text-2xl text-accent mb-12 uppercase tracking-widest">Let's Connect.</p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <a href="#" class="btn-primary group relative overflow-hidden px-8 py-4 bg-white/5 border border-white/20 hover:border-accent text-white font-mono uppercase tracking-widest transition-all duration-300 w-full sm:w-auto">
+                    <span class="relative z-10 group-hover:text-accent transition-colors font-bold">View Resume</span>
+                    <div class="absolute inset-0 bg-accent/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                </a>
+                <a href="#" class="btn-primary group relative overflow-hidden px-8 py-4 bg-white/5 border border-white/20 hover:border-[#0A66C2] text-white font-mono uppercase tracking-widest transition-all duration-300 w-full sm:w-auto">
+                    <span class="relative z-10 group-hover:text-[#0A66C2] transition-colors font-bold">LinkedIn</span>
+                    <div class="absolute inset-0 bg-[#0A66C2]/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                </a>
+                <a href="#" class="btn-primary group relative overflow-hidden px-8 py-4 bg-white/5 border border-white/20 hover:border-success text-white font-mono uppercase tracking-widest transition-all duration-300 w-full sm:w-auto">
+                    <span class="relative z-10 group-hover:text-success transition-colors font-bold">Email Me</span>
+                    <div class="absolute inset-0 bg-success/10 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <script src="sig.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Auto-render article cards on page load
+        window.addEventListener('load', () => {
+            const renderArticles = () => {
+                const articles = [
+                    { id: 'dangerous-person', title: 'The Most Dangerous Person on a Major Incident Bridge', image: 'most-dangerous-person.png', tags: ['Leadership', 'Major Incident Management'], publishedDate: 'June 15, 2026', views: 2847, readingTime: 8 },
+                    { id: 'dashboard-lied', title: 'The Day the Dashboard Lied', image: 'dashboard-lied.png', tags: ['Monitoring', 'Customer Experience'], publishedDate: 'June 10, 2026', views: 3124, readingTime: 9 },
+                    { id: 'silence-executives', title: 'The Silence That Scares Executives', image: 'silence-executives.png', tags: ['Communication', 'Stakeholder Management'], publishedDate: 'June 5, 2026', views: 2591, readingTime: 7 },
+                    { id: 'executive-escalation', title: 'Why Every Incident Doesn\'t Need an Executive Escalation', image: 'executive-escalation.png', tags: ['Leadership', 'Escalation Management'], publishedDate: 'May 28, 2026', views: 1983, readingTime: 6 },
+                    { id: 'first-15-minutes', title: 'The First 15 Minutes Decide Everything', image: 'first-15-minutes.png', tags: ['Incident Response', 'Operations'], publishedDate: 'May 20, 2026', views: 4156, readingTime: 10 },
+                    { id: '3am-outage', title: 'What a 3 AM Outage Teaches About Leadership', image: '3am-outage.png', tags: ['Leadership', 'Operations'], publishedDate: 'May 12, 2026', views: 3458, readingTime: 8 },
+                    { id: 'activity-vs-progress', title: 'The Difference Between Activity and Progress During Incidents', image: 'activity-vs-progress.png', tags: ['Operational Excellence', 'Incident Management'], publishedDate: 'April 28, 2026', views: 2214, readingTime: 7 },
+                    { id: 'valuable-person', title: 'The Most Valuable Person During a Major Incident Is Often Not the Smartest', image: 'valuable-person.png', tags: ['Leadership', 'Teamwork'], publishedDate: 'April 15, 2026', views: 3687, readingTime: 9 },
+                    { id: 'outage-fixed', title: 'The Outage Was Fixed. The Incident Was Not.', image: 'outage-fixed.jpeg', tags: ['Service Recovery', 'Lessons Learned'], publishedDate: 'April 5, 2026', views: 2945, readingTime: 8 }
+                ];
+
+                const grid = document.getElementById('articles-grid');
+                if (!grid || grid.children.length > 0) return;
+
+                articles.forEach((article, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'article-card';
+                    card.style.animationDelay = `${index * 0.05}s`;
+                    card.innerHTML = `
+                        <img src="${article.image}" alt="${article.title}" class="article-image">
+                        <div class="article-content">
+                            <h3 class="article-title">${article.title}</h3>
+                            <div class="article-tags">
+                                ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
+                            </div>
+                            <div class="article-meta">
+                                <span class="article-meta-item date">${article.publishedDate}</span>
+                                <span class="article-meta-item time">${article.readingTime} min read</span>
+                                <span class="article-meta-item views">${article.views.toLocaleString()} views</span>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            };
+
+            setTimeout(renderArticles, 100);
+        });
+    </script>
+
+    <!-- WebGL Starfield Background -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="stars.js"></script>
+    <!-- Article Viewer Overlay (body-level, escapes all stacking contexts) -->
+    <div id="article-viewer" class="fixed inset-0 hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch;">
+        <div class="min-h-full flex items-start justify-center py-16 px-4 md:px-8">
+            <div class="relative w-full max-w-3xl rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
+                <!-- Reading Progress Bar -->
+                <div id="reading-progress" class="sticky top-0 left-0 h-1 bg-gradient-to-r from-accent to-critical rounded-full z-10" style="width: 0%;"></div>
+
+                <div class="p-8 md:p-12">
+                    <!-- Close Button — inside card, top-right -->
+                    <button id="close-article" class="float-right w-10 h-10 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 -mt-2 -mr-2 mb-4">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Hero Image -->
+                    <div class="clear-both mb-8 rounded-xl overflow-hidden">
+                        <img id="article-hero-image" src="" alt="" class="w-full max-h-[50vh] object-contain">
+                    </div>
+
+                    <!-- Article Metadata -->
+                    <div class="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-400 pb-6 border-b border-white/10">
+                        <span id="article-date"></span>
+                        <span class="text-accent">•</span>
+                        <span id="article-reading-time"></span>
+                        <span class="text-accent">•</span>
+                        <span id="article-views"></span>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 id="article-title" class="font-hero text-3xl md:text-4xl font-bold mb-4"></h1>
+
+                    <!-- Tags -->
+                    <div id="article-tags" class="flex flex-wrap gap-2 mb-8"></div>
+
+                    <!-- Author -->
+                    <div class="flex items-center gap-4 mb-10 pb-8 border-b border-white/10">
+                        <div>
+                            <p class="text-white font-hero font-bold">Hemant Khandelwal</p>
+                            <p class="text-sm text-gray-400">Major Incident Manager</p>
+                        </div>
+                    </div>
+
+                    <!-- Article Content -->
+                    <div id="article-content" class="prose prose-invert max-w-none mb-10 text-gray-300 leading-relaxed space-y-6">
+                    </div>
+
+                    <!-- Share & Copy Buttons -->
+                    <div class="flex gap-4 pt-8 border-t border-white/10">
+                        <button id="share-article" class="flex-1 px-6 py-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white font-body transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C9.589 12.938 10 12.502 10 12c0-.502-.41-.938-1.316-1.342m0 2.684a3 3 0 110-2.684m9.108-3.342c.948.464 1.408.900 1.408 1.342 0 .502-.46.938-1.408 1.342m0-2.684a3 3 0 110 2.684m0 0h.008v.008h-.008v-.008zm0 5a3 3 0 110-6 3 3 0 010 6zm0 0h.008v.008h-.008v-.008z"></path>
+                            </svg>
+                            Share
+                        </button>
+                        <button id="copy-link" class="flex-1 px-6 py-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-white font-body transition-all duration-300 flex items-center justify-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                            </svg>
+                            Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
