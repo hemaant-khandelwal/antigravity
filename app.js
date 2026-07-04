@@ -51,9 +51,7 @@
                 setTimeout(() => {
                     preloader.style.opacity = '0';
                     preloader.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => {
-                        if (preloader.parentNode) preloader.remove();
-                    }, 600);
+                    setTimeout(() => { if (preloader.parentNode) preloader.remove(); if (window.playSignatureAnimation) window.playSignatureAnimation(); }, 600);
                 }, 500);
             }, 1200);
         }
@@ -171,21 +169,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.warn('Signature canvas processing failed, using source image.', error);
             }
 
-            gsap.to(sigImg, {
-                clipPath: 'inset(0 0% 0 0)',
-                duration: 2.5,
-                ease: 'power2.inOut',
-                delay: 0.5,
-            });
+            window.playSignatureAnimation = () => { gsap.to(sigImg, { clipPath: 'inset(0 0% 0 0)', duration: 2.5, ease: 'power2.inOut', delay: 0.1 }); };
         };
 
         tempImg.onerror = () => {
-            gsap.to(sigImg, {
-                clipPath: 'inset(0 0% 0 0)',
-                duration: 2.5,
-                ease: 'power2.inOut',
-                delay: 0.5,
-            });
+            window.playSignatureAnimation = () => { gsap.to(sigImg, { clipPath: 'inset(0 0% 0 0)', duration: 2.5, ease: 'power2.inOut', delay: 0.1 }); };
         };
     }
 
@@ -1299,7 +1287,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('article-title').textContent = article.title;
         document.getElementById('article-date').textContent = article.publishedDate;
         document.getElementById('article-reading-time').textContent = `${article.readingTime} min read`;
-        document.getElementById('article-views').textContent = `${article.views.toLocaleString()} views`;
+        let storedViews = localStorage.getItem('views_' + article.id) ? parseInt(localStorage.getItem('views_' + article.id)) : article.views; storedViews++; localStorage.setItem('views_' + article.id, storedViews); document.getElementById('article-views').textContent = storedViews.toLocaleString() + ' views';
         
         const tagsContainer = document.getElementById('article-tags');
         tagsContainer.innerHTML = article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('');
