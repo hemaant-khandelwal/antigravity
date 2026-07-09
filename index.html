@@ -106,23 +106,29 @@
     <!-- Premium Mouse Glow -->
     <div id="mouse-glow"></div>
 
-    <!-- Top Left Logo (Signature) -->
-    <div class="fixed top-4 left-4 md:top-10 md:left-10 z-[100] pointer-events-none">
-        <img src="signature.png" class="signature-img w-32 sm:w-40 md:w-72 h-auto object-contain" alt="Hemant Khandelwal Signature">
-    </div>
+    <!-- Premium Glassmorphism Header -->
+    <header class="fixed top-0 left-0 w-full z-[100] px-4 md:px-10 py-3 md:py-4 flex justify-between items-center bg-black/40 backdrop-blur-xl border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
+        <!-- Logo (Signature) Container -->
+        <div class="pointer-events-none w-32 sm:w-40 md:w-56 h-auto flex items-center">
+            <img src="signature.png" class="signature-img w-full h-auto object-contain" alt="Hemant Khandelwal Signature">
+        </div>
 
-    <!-- Top Right Nav -->
-    <div class="fixed top-6 right-6 md:top-10 md:right-10 z-[100] flex items-center gap-6">
-        <a href="https://in.linkedin.com/in/hemant-khandelwal" target="_blank" rel="noopener noreferrer" class="text-white hover:text-accent transition-all duration-300 hover:scale-110 drop-shadow-[0_0_10px_rgba(0,229,255,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,229,255,0.8)]" title="LinkedIn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-            </svg>
-        </a>
-        <a href="https://wa.me/919766516846" target="_blank" rel="noopener noreferrer" class="hire-me-btn font-hero text-sm md:text-base font-bold tracking-wider uppercase px-6 py-2.5 rounded-full border border-accent text-accent relative overflow-hidden group">
-            <span class="relative z-10 group-hover:text-primary transition-colors duration-300">Hire Me</span>
-            <div class="absolute inset-0 bg-accent transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></div>
-        </a>
-    </div>
+        <!-- Right Side Nav -->
+        <div class="flex items-center gap-3 md:gap-6">
+            <!-- Google Translate Element -->
+            <div id="google_translate_element"></div>
+
+            <a href="https://in.linkedin.com/in/hemant-khandelwal" target="_blank" rel="noopener noreferrer" class="text-white hover:text-accent transition-all duration-300 hover:scale-110 drop-shadow-[0_0_10px_rgba(0,229,255,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,229,255,0.8)] hidden sm:block" title="LinkedIn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+            </a>
+            <a href="https://wa.me/919766516846" target="_blank" rel="noopener noreferrer" class="hire-me-btn font-hero text-xs md:text-sm font-bold tracking-wider uppercase px-4 md:px-6 py-2 md:py-2.5 rounded-full border border-accent text-accent relative overflow-hidden group whitespace-nowrap">
+                <span class="relative z-10 group-hover:text-primary transition-colors duration-300">Hire Me</span>
+                <div class="absolute inset-0 bg-accent transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-300 ease-out z-0"></div>
+            </a>
+        </div>
+    </header>
 
     <!-- Grid Background Overlay -->
     <div class="fixed inset-0 pointer-events-none z-[-1] grid-bg opacity-30"></div>
@@ -763,5 +769,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Google Translate Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE, autoDisplay: false}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
