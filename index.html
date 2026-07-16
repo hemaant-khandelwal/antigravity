@@ -454,7 +454,7 @@
         </div>
     </section>
 
-    <div id="scenario-panel" class="fixed inset-0 hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch;">
+    <div id="scenario-panel" data-lenis-prevent="true" class="fixed inset-0 h-[100dvh] w-full hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch; pointer-events: auto;">
         <div class="min-h-full flex items-start justify-center py-16 px-4 md:px-8">
             <div class="relative w-full max-w-5xl rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_40px_120px_rgba(0,0,0,0.55)] overflow-hidden">
                 <!-- Close Button — inside card, top-right -->
@@ -708,7 +708,7 @@
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script src="stars.js"></script>
     <!-- Article Viewer Overlay (body-level, escapes all stacking contexts) -->
-    <div id="article-viewer" class="fixed inset-0 hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch;">
+    <div id="article-viewer" data-lenis-prevent="true" class="fixed inset-0 h-[100dvh] w-full hidden z-[999] bg-black/30 backdrop-blur-xl overflow-y-auto overscroll-contain" style="-webkit-overflow-scrolling: touch; pointer-events: auto;">
         <div class="py-16 px-4 md:px-8 max-w-3xl mx-auto">
             <div class="relative w-full rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_40px_120px_rgba(0,0,0,0.55)]">
                 <!-- Reading Progress Bar -->
