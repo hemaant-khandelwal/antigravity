@@ -794,7 +794,7 @@ body {
 
 .expertise-marquee {
   --s: 180px; /* size of the logo/box */
-  --d: 25s; /* animation duration */
+  --d: 50s; /* animation duration */
   --n: 5; /* number of visible items */
   
   display: flex;
