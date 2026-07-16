@@ -884,9 +884,3 @@ body {
 @keyframes expertise-x { 
   to {offset-distance: 100%}
 }
-
-/* Mask the bottom right corner of the canvas to hide the AI watermark */
-#sequence-canvas {
-  mask-image: radial-gradient(ellipse 35% 35% at 98% 95%, transparent 0%, transparent 15%, black 45%);
-  -webkit-mask-image: radial-gradient(ellipse 35% 35% at 98% 95%, transparent 0%, transparent 15%, black 45%);
-}
